@@ -1,3 +1,10 @@
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts.chat import (
+    ChatPromptTemplate,
+    SystemMessagePromptTemplate,
+    HumanMessagePromptTemplate,
+)
+from langchain.chains import LLMChain
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import ConversationChain
@@ -7,41 +14,19 @@ import config
 os.environ["OPENAI_API_KEY"] = config.API_KEYS["OPENAI_API_KEY"]
 
 def llm_debate_start(level, topic, news):
-    llm = OpenAI(model_name="text-davinci-003", temperature=0.9)
-    resp = llm("안녕")
-    print(resp)
-    return resp
+    llm_topic = OpenAI(model_name='text-davinci-003', temperature=0.9)
+    idea_prompt = f"""아래 기사를 1줄로 요약해줘
+    ```
+    {news}
     """
-    Generate a debate start statement based on given parameters.
-
-    Parameters:
-    - level: The level of the debate (e.g., "beginner", "intermediate", "advanced").
-    - topic: The topic for the debate.
-    - string_format: A string format to customize the output.
-
-    Returns:
-    - A formatted string to start the debate.
-    """
-    '''
-    llm = OpenAI(temperature=0.9)
+    main_idea = llm_topic(idea_prompt)
+    print(main_idea)
     
-    template = "~~탬플릿 내용~~"
-    
-    prompt = PromptTemplate(
-        input_variables=["history", "input"], 
-        template=template
-    )
-
-    memory = ConversationKGMemory(llm=llm)
-    memory.save_context({"input":"5만원 이하 네이비 크롭 니트 찾아줘"}, {"output":"https://www.musinsa.com/categories/item/001006?color=36&price1=0&price2=50000&includeKeywords=크롭"})
-    memory.save_context({"input":"40,000원 이하 크롭 블랙 니트를 찾아줘"}, {"output":"https://www.musinsa.com/categories/item/001006?color=2&price1=0&price2=40000&includeKeywords=크롭"})
-
-    conversation_with_kg = ConversationChain(
-        llm=llm,
-        verbose=True,
-        prompt=prompt,
-        memory=memory
-    )
-
-    return conversation_with_kg.predict(input=user_input)
-    '''
+    chat = ChatOpenAI(temperature=0.9) 
+    template="아래 input을 바탕으로 토론의 시작 질문을 {input_level} 수준에서 {input_topic}로 정해줘."
+    system_message_prompt = SystemMessagePromptTemplate.from_template(template)
+    human_template="{text}"
+    human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
+    chat_prompt = ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])
+    chatchain = LLMChain(llm=chat, prompt=chat_prompt)
+    return chatchain.run(input_level= level, input_topic=topic, text=main_idea)
