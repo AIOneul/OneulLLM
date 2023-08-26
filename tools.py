@@ -40,3 +40,12 @@ def remove_incomplete_sentences(paragraph):
     
     # Join the sentences back together
     return ' '.join(complete_sentences)
+
+def extract_corrected_text(feedback: str) -> str:
+    """Extract the corrected text from feedback string."""
+    # Check if "고친 문장:" exists in the feedback
+    if "고친 문장:" in feedback:
+        # Split the string based on "고친 문장:" and return the text after it
+        return feedback.split("고친 문장:")[1].strip()
+    return None  # return original feedback if "고친 문장:" is not present
+
