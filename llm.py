@@ -35,7 +35,6 @@ def llm_debate_start(level, topic, news):
     topic_chatchain = LLMChain(llm=topic_chat, prompt=topic_chat_prompt)
     
     main_idea = topic_chatchain.run(input_level= level, input_topic=topic, text=news)
-    print(main_idea)
     
     chat = ChatOpenAI(temperature=0.9) 
     template="""
@@ -69,14 +68,15 @@ def llm_debate_start(level, topic, news):
 
 def llm_debate_response(level, topic, res, logs):
     
+    rev_logs = logs[::-1]
+
     memory = ConversationBufferMemory()
-    for log in logs:  
+    for log in rev_logs:  
         memory.save_context({"input": log[0]}, {"output": log[1]})
-    print(memory.load_memory_variables({}))
     llm = ChatOpenAI(temperature=0.9) 
     
     input_message = f"""당신은 {level}이다. 현재 {level}과 {topic}을 주제로 논리적인 토론을 하고 있다.
-    토론의 발제는 다음과 같다. {logs[0][0]}
+    토론의 발제는 다음과 같다. {rev_logs[0][0]}
     당신은 상대방의 대답에 맞추어 3문장 정도로 {level}이 이해할 수 있는 적절한 답변을 해서 토론을 이어가 주세요.
     우선 공감하는 표현의 말을 한마디 합니다. 첫번째 문장은 상대의 말을 요약합니다. 두번째 문장은 상대의 의견에 반박합니다. 세번째 문장은 상대에게 질문을 합니다.
     
@@ -94,7 +94,7 @@ def llm_debate_response(level, topic, res, logs):
 def llm_debate_feedback(res):
     chat = ChatOpenAI(temperature=0.9) 
     template="""당신은 국어 선생님입니다. 적절한 국어 사용을 피드백해주는 것에 능합니다.
-    문맥, 맞춤법, 적절한 어휘 사용을 검토해서 고친 문장을 줘.
+    문맥, 맞춤법을 검토해서 고친 문장을 줘.
     고칠 필요가 없을 경우 "적절한 문장이에요"를 줘.
     
     [예시]
@@ -169,21 +169,7 @@ def llm_generate_quiz(level, news):
     나) 땅에 누워 박수를 치다.
     다) 손을 흔들며 박수를 치다.
     정답: 가) 서 있는 상태로 박수를 치다.
-    
-    질문:달에 도착한 찬드라얀 3호는 어떤 행동을 하려고 하나요?
-    가) 선체를 세우고 착륙하기
-    나) 물을 분해해 연료로 사용하기
-    다) 우주비행사들을 보내기
-    정답: 가) 선체를 세우고 착륙하기
-
-    달의 남극에 무엇이 존재할 가능성이 높아서 연구되고 있는 걸까요?
-    가) 눈
-    나) 얼음
-    다) 바위
-    정답: 나) 얼음 
     """
-    
-    print("질문이왔어요!")
     system_message_prompt = SystemMessagePromptTemplate.from_template(template)
     human_template="""
     ```
